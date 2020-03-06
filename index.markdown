@@ -27,6 +27,5 @@ title: Books UI
   </div>
 </div>
 
-
 {% include book-modal.html %}
 {% include bookUpdate-modal.html %}

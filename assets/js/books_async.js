@@ -72,7 +72,23 @@ class Book{
     $("#bookModalUpdate").modal();
   }
 
-  submit(e)
+  async loadBook(){
+      try{
+        const result=await axios.get(`${BOOKS_API}/books`);
+        const books=result.data;
+        let bookList='';
+        for (const book of books) {
+            bookList+="<tr><td><a href='#' class='btn btn-danger btn-sm deleteBook' id='deleteBook' data-id="+book.id+">Elimina</a></td><td><a href='#' class='btn btn-primary btn-sm updateBook' id='updateBook' data-id="+book.id+">Modifica</a></td><td>"+book.title+"</td><td>"+new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(book.price)+"</td></tr>";
+          }
+          this.bodyTable.innerHTML=bookList;
+      }
+      catch(err)
+      {
+          console.log(err);
+      }
+  }
+
+  async submit()
   {
     this.form=document.getElementById('formCreate');
     if(!this.form.checkValidity())
@@ -82,27 +98,24 @@ class Book{
       return;
     }
 
-    //Richiesta post
-    axios.post(BOOKS_API+'/books', {
-      title: this.title.value,
-      price: parseFloat(this.price.value)
-    })
-    .then((result)  => {
+    try{
+        //Richiesta post
+        const result=await axios.post(BOOKS_API+'/books', {
+        title: this.title.value,
+        price: parseFloat(this.price.value)
+      });
       if(result.status===200)
       {
         this.loadBook();
         $("#bookModal").modal('hide');
         this.alertSuccess("Libro aggiunto!");
       }
-    })
-    .catch( (error) => {
-    // handle error
-    console.log(error);
-    })
+    }catch(err){
+        console.log(err);
+    }
   }
 
-  submitUpdate(evt)
-  {
+  async submitUpdate(){
     this.form=document.getElementById('formUpdate');
     if(!this.form.checkValidity())
     {
@@ -110,61 +123,31 @@ class Book{
       this.resetForm();
       return;
     }
-
-    //Richiesta put
-    axios.put(BOOKS_API+'/books/'+this.idUpdate.value, {
-      title: this.titleUpdate.value,
-      price: parseFloat(this.priceUpdate.value)
-    })
-    .then((result) => {
-      if(result.status===204)
-      {
-        this.loadBook();
-        $("#bookModalUpdate").modal('hide');
-        this.alertSuccess("Libro modificato!");
-      }
-    })
-    .catch( (error) => {
-    // handle error
-    console.log(error);
-    })
-
-  }
-
-  loadBook() {
-    axios.get(`${BOOKS_API}/books`)
-      .then(result => {
-        const books = result.data;
-
-        console.log(result.data);
-
-        var bookList='';
-        for (const book of books) {
-          bookList+="<tr><td><a href='#' class='btn btn-danger btn-sm deleteBook' id='deleteBook' data-id="+book.id+">Elimina</a></td><td><a href='#' class='btn btn-primary btn-sm updateBook' id='updateBook' data-id="+book.id+">Modifica</a></td><td>"+book.title+"</td><td>"+new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(book.price)+"</td></tr>";
-        }
-        this.bodyTable.innerHTML=bookList;
+    try{
+        //Richiesta put
+        await axios.put(BOOKS_API+'/books/'+this.idUpdate.value, {
+        title: this.titleUpdate.value,
+        price: parseFloat(this.priceUpdate.value)
       })
-      .catch(err => {
+    }catch(err){
         console.log(err);
-      });
+    }
   }
 
-  deleteBook(evt)
-  {
-    console.log(this);
+  async deleteBook(evt){
     let idBook=$(evt.currentTarget).data("id");
     let btnConfirm=confirm("Sei sicuro di voler eliminare il libro?");
     if(btnConfirm==true)
     {
-      //Elimino il libro
-      axios.delete(`${BOOKS_API}/books/${idBook}`)
-      .then(result => {
-        this.alertSuccess("Libro eliminato!");
-        this.loadBook();
-      })
-      .catch(err => {
-        console.log(err);
-      });
+        try{
+            //Elimino il libro
+            await axios.delete(`${BOOKS_API}/books/${idBook}`);
+            this.alertSuccess("Libro eliminato!");
+            this.loadBook();
+        }catch(err)
+        {
+            console.log(err);
+        }
     }
   }
 
